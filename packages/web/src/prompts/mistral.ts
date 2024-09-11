@@ -1,6 +1,7 @@
 import {
   ChatParams,
   EditorialParams,
+  GenerateSqlParams,
   GenerateTextParams,
   Prompter,
   PromptList,
@@ -18,6 +19,54 @@ const systemContexts: { [key: string]: string } = {
   '/editorial':
     'あなたは文章を校正する AI アシスタントで適切に修正すべき箇所を指摘します。',
   '/generate': 'あなたは指示に従って文章を作成するライターです。',
+  '/generate-sql': `以下はユーザーと AI のやりとりです。
+ユーザーは AI に <schemas></schemas> の xml タグで囲って RDB のスキーマ情報を渡します。
+さらに、<input></input> の xml タグで囲って AI に記述して欲しい SQL の説明を渡します。
+AI は、ユーザーの指示をよく理解する熟練のデータベーススペシャリストなので、以下の <rules></rules> を守って、SQL だけを出力してください。
+<rules>
+* <schemas> と <input> の情報を頼りに、ユーザーが求める SQL を ANSI SQL に準拠して出力してください。
+* join する場合はテーブル名に別名をつけた上で、列名は必ず \`別名.列名\` と表記してください。
+* GROUP BY や ORDER BY 句には、必ず \`列名\` あるいは \`別名.列名\`を使用することを遵守してください。列番号の使用は修正が難しくなるので禁止です。
+</rules>
+出力は
+<output>\`\`\`sql
+{SQL}
+\`\`\`</output>
+の形式を遵守してください。
+SQL のコード以外を出力してはいけません。解説なども出力してはいけません。
+出力例を <examples></examples> で与えます。
+
+<examples>
+<output>\`\`\`sql
+SELECT * FROM v_schedule;
+\`\`\`</output>
+<output>\`\`\`sql
+SELECT
+  e.id AS employee_id,
+  e.name AS employee_name,
+  c.id AS company_id,
+  c.name AS company_name
+FROM
+  employees e
+JOIN
+  companies c ON c.id = e.company_id
+;
+\`\`\`</output>
+<output>\`\`\`sql
+SELECT
+  id,
+  COUNT(price),
+  SUM(price),
+  MIN(price),
+  MAX(price)
+FROM
+  transaction
+GROUP BY
+  id
+;
+\`\`\`</output>
+</examples>
+`,
   '/translate': 'あなたは文章を翻訳する AI アシスタントです。',
   '/web-content':
     'あなたは HTML からメインのコンテンツだけを抽出する仕事に従事してます。',
@@ -49,7 +98,7 @@ const systemContexts: { [key: string]: string } = {
 * 改行は必ず\\nを出力してください。
 
 
-### recommended-style-preset-rules 
+### recommended-style-preset-rules
 * 生成した画像と相性の良いと思われるStylePresetを3つ提案してください。必ず配列で設定してください。
 * StylePresetは、以下の種類があります。必ず以下のものを提案してください。
  * 3d-model,analog-film,anime,cinematic,comic-book,digital-art,enhance,fantasy-art,isometric,line-art,low-poly,modeling-compound,neon-punk,origami,photographic,pixel-art,tile-texture
@@ -107,7 +156,7 @@ export const mistralPrompter: Prompter = {
 例えば入力が「こちらの資料でよろしかったでしょうか」だった場合は、以下のように出力してください。
 <output>[
   {
-    "excerpt":"よろしかったでしょうか", 
+    "excerpt":"よろしかったでしょうか",
     "replace":"よろしいでしょうか",
     "comment":"現在のことなので過去形はおかしい"
   }
@@ -116,12 +165,12 @@ export const mistralPrompter: Prompter = {
 入力が「あたしはどこでも寝れます」だった場合は、以下のように出力してください。
 <output>[
   {
-    "excerpt":"あたし", 
+    "excerpt":"あたし",
     "replace":"私",
     "comment":"あたしという表現は不適切"
   },
   {
-    "excerpt":"寝れます", 
+    "excerpt":"寝れます",
     "replace":"寝られます",
     "comment":"ら抜き言葉"
   }
@@ -129,7 +178,7 @@ export const mistralPrompter: Prompter = {
 入力が「本をお読みになられる」だった場合は、以下のように出力してください。
 <output>[
   {
-    "excerpt":"お読みになられる", 
+    "excerpt":"お読みになられる",
     "replace":"お読みになる",
     "comment":"二重敬語"
   }
@@ -137,12 +186,20 @@ export const mistralPrompter: Prompter = {
 入力が「田中様が伺う」だった場合は、以下のように出力してください。
 <output>[
   {
-    "excerpt":"伺う", 
+    "excerpt":"伺う",
     "replace":"お越しになる",
     "comment":"謙譲語ではなく尊敬語を使う"
   }
 ]</output>
 [/INST]わかりました。[INST]${params.sentence}`;
+  },
+  generateSqlPrompt(params: GenerateSqlParams): string {
+    return `<schemas>
+${params.schemas}
+</schemas>
+<input>
+${params.instruction}
+</input>`;
   },
   generateTextPrompt(params: GenerateTextParams): string {
     return `これから文章を与えるので「${params.context}」という指示通りに日本語の文章に変換してください。出力は変換結果の文章だけを <output>{変換結果の文章}</output> のように xml タグで囲って出力してください。それ以外の文章は一切出力してはいけません。例外はありません。[/INST]わかりました。[INST]${params.information}`;
