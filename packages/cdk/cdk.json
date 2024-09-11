@@ -46,8 +46,14 @@
     "agentEnabled": true,
     "agentRegion": "us-east-1",
     "searchAgentEnabled": true,
-    "searchApiKey": "",
-    "agents": [],
+    "searchApiKey": "BSAUQgPCLHkOnedUtPtZXw6BzeBtG7I",
+    "agents": [
+      {
+        "displayName": "CodeInterpreter",
+        "agentId": "P1NTBOJZW9",
+        "aliasId": "J9JL6XEQDY"
+      }
+    ],
     "allowedIpV4AddressRanges": null,
     "allowedIpV6AddressRanges": null,
     "allowedCountryCodes": null,
