@@ -34,6 +34,11 @@ export type GenerateImagePageQueryParams = BaseQueryParams & {
   imageModelId?: string;
 };
 
+export type GenerateSqlPageQueryParams = BaseQueryParams & {
+  schemas?: string;
+  instruction?: string;
+};
+
 export type GenerateTextPageQueryParams = BaseQueryParams & {
   information?: string;
   context?: string;

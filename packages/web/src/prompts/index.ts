@@ -31,6 +31,11 @@ export type EditorialParams = {
   context?: string;
 };
 
+export type GenerateSqlParams = {
+  schemas: string;
+  instruction: string;
+};
+
 export type GenerateTextParams = {
   information: string;
   context: string;
@@ -79,6 +84,7 @@ export interface Prompter {
   chatPrompt(params: ChatParams): string;
   summarizePrompt(params: SummarizeParams): string;
   editorialPrompt(params: EditorialParams): string;
+  generateSqlPrompt(params: GenerateSqlParams): string;
   generateTextPrompt(params: GenerateTextParams): string;
   translatePrompt(params: TranslateParams): string;
   webContentPrompt(params: WebContentParams): string;

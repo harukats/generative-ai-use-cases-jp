@@ -1,6 +1,7 @@
 import {
   ChatParams,
   EditorialParams,
+  GenerateSqlParams,
   GenerateTextParams,
   Prompter,
   PromptList,
@@ -19,6 +20,54 @@ const systemContexts: { [key: string]: string } = {
   '/editorial':
     '以下は文章を校正したいユーザーと、ユーザーの意図と文章を理解して、適切に修正すべき箇所を指摘する校正 AI のやりとりです。ユーザーは <input> タグで校正してほしい文章を与えます。また、<その他指摘してほしいこと> タグで指摘時に追加で指摘したい箇所を与えます。AI は文章について問題がある部分だけを指摘してください。ただし、出力は <output-format></output-format> 形式の JSON Array だけを <output></output> タグで囲って出力してください。<output-format>[{excerpt: string; replace?: string; comment?: string}]</output-format>指摘事項がない場合は空配列を出力してください。',
   '/generate': 'あなたは指示に従って文章を作成するライターです。',
+  '/generate-sql': `以下はユーザーと AI のやりとりです。
+ユーザーは AI に <schemas></schemas> の xml タグで囲って RDB のスキーマ情報を渡します。
+さらに、<input></input> の xml タグで囲って AI に記述して欲しい SQL の説明を渡します。
+AI は、ユーザーの指示をよく理解する熟練のデータベーススペシャリストなので、以下の <rules></rules> を守って、SQL だけを出力してください。
+<rules>
+* <schemas> と <input> の情報を頼りに、ユーザーが求める SQL を ANSI SQL に準拠して出力してください。
+* join する場合はテーブル名に別名をつけた上で、列名は必ず \`別名.列名\` と表記してください。
+* GROUP BY や ORDER BY 句には、必ず \`列名\` あるいは \`別名.列名\`を使用することを遵守してください。列番号の使用は修正が難しくなるので禁止です。
+</rules>
+出力は
+<output>\`\`\`sql
+{SQL}
+\`\`\`</output>
+の形式を遵守してください。
+SQL のコード以外を出力してはいけません。解説なども出力してはいけません。
+出力例を <examples></examples> で与えます。
+
+<examples>
+<output>\`\`\`sql
+SELECT * FROM v_schedule;
+\`\`\`</output>
+<output>\`\`\`sql
+SELECT
+  e.id AS employee_id,
+  e.name AS employee_name,
+  c.id AS company_id,
+  c.name AS company_name
+FROM
+  employees e
+JOIN
+  companies c ON c.id = e.company_id
+;
+\`\`\`</output>
+<output>\`\`\`sql
+SELECT
+  id,
+  COUNT(price),
+  SUM(price),
+  MIN(price),
+  MAX(price)
+FROM
+  transaction
+GROUP BY
+  id
+;
+\`\`\`</output>
+</examples>
+`,
   '/translate':
     '以下は文章を翻訳したいユーザーと、ユーザーの意図と文章を理解して適切に翻訳する AI のやりとりです。ユーザーは <input> タグで翻訳する文章と、<language> タグで翻訳先の言語を与えます。また、<考慮してほしいこと> タグで翻訳時に考慮してほしいことを与えることもあります。AI は <考慮してほしいこと> がある場合は考慮しつつ、<input> で与えるテキストを <language> で与える言語に翻訳してください。出力は<output>{翻訳結果}</output>の形で翻訳した文章だけを出力してください。それ以外の文章は一切出力してはいけません。',
   '/web-content':
@@ -114,6 +163,14 @@ ${
     : ''
 }
 `;
+  },
+  generateSqlPrompt(params: GenerateSqlParams): string {
+    return `<schemas>
+${params.schemas}
+</schemas>
+<input>
+${params.instruction}
+</input>`;
   },
   generateTextPrompt(params: GenerateTextParams): string {
     return `<input></input>の情報から<作成する文書の形式></作成する文書の形式>で与える指示に従って、指示された形式の文章のみを出力してください。それ以外の文言は一切出力してはいけません。例外はありません。

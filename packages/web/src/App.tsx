@@ -18,6 +18,7 @@ import {
   PiRobot,
   PiUploadSimple,
   PiVideoCamera,
+  PiTerminal,
 } from 'react-icons/pi';
 import { Outlet } from 'react-router-dom';
 import Drawer, { ItemProps } from './components/Drawer';
@@ -118,6 +119,12 @@ const items: ItemProps[] = [
     label: '画像生成',
     to: '/image',
     icon: <PiImages />,
+    display: 'usecase' as const,
+  },
+  {
+    label: 'SQL 生成',
+    to: '/generate-sql',
+    icon: <PiTerminal />,
     display: 'usecase' as const,
   },
   multiModalEnabled

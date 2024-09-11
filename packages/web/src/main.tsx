@@ -23,6 +23,7 @@ import RagPage from './pages/RagPage';
 import RagKnowledgeBasePage from './pages/RagKnowledgeBasePage';
 import WebContent from './pages/WebContent';
 import GenerateImagePage from './pages/GenerateImagePage';
+import GenerateSqlPage from './pages/GenerateSqlPage.tsx';
 import TranscribePage from './pages/TranscribePage';
 import AgentChatPage from './pages/AgentChatPage.tsx';
 import FileUploadPage from './pages/FileUploadPage.tsx';
@@ -84,6 +85,10 @@ const routes: RouteObject[] = [
   {
     path: '/image',
     element: <GenerateImagePage />,
+  },
+  {
+    path: 'generate-sql',
+    element: <GenerateSqlPage />,
   },
   {
     path: '/transcribe',
