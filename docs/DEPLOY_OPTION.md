@@ -29,7 +29,7 @@ context の `ragEnabled` に `true` を指定します。(デフォルトは `fa
 }
 ```
 
-変更後に `npm run cdk:deploy` で再度デプロイして反映させます。また、`/packages/cdk/rag-docs/docs` に保存されているデータが、自動で Kendra データソース用の S3 バケットにアップロードされます。
+変更後に `npm run cdk:deploy` で再度デプロイして反映させます。また、`/packages/cdk/rag-docs/docs` に保存されているデータが、自動で Kendra データソース用の S3 バケットにアップロードされます。(ただし `logs` から始まる名前のファイルは同期されませんので注意してください。)
 
 続いて、Kendra の Data source の Sync を以下の手順で行ってください。
 
@@ -111,7 +111,7 @@ context の `ragKnowledgeBaseEnabled` に `true` を指定します。(デフォ
 npx -w packages/cdk cdk bootstrap --region us-east-1
 ```
 
-デプロイ時に `/packages/cdk/rag-docs/docs` に保存されているデータが、自動で Knowledge Base データソース用の S3 バケットにアップロードされます。デプロイ完了後、以下の手順で Knowledge Base の Data source を Sync してください。
+デプロイ時に `/packages/cdk/rag-docs/docs` に保存されているデータが、自動で Knowledge Base データソース用の S3 バケットにアップロードされます。(ただし `logs` から始まる名前のファイルは同期されませんので注意してください。) デプロイ完了後、以下の手順で Knowledge Base の Data source を Sync してください。
 
 1. [Knowledge Base のコンソール画面](https://console.aws.amazon.com/bedrock/home#/knowledge-bases) を開く
 1. generative-ai-use-cases-jp をクリック
@@ -316,6 +316,44 @@ Knowledge Base プロンプト例: キーワードで検索し情報を取得し
 }
 ```
 
+### PromptFlow チャットユースケースの有効化
+
+PromptFlow チャットユースケースでは、作成済みの Prompt Flow を呼び出すことができます。
+
+プロジェクトのルートディレクトリにある `cdk.json` ファイルを開き、`context` セクション内に `promptFlows` 配列を追加または編集します。
+
+[Prompt Flows の AWS コンソール画面](https://console.aws.amazon.com/bedrock/home#/prompt-flows) から手動で Prompt Flows を作成します。その後、Alias を作成し、作成済みの Prompt Flow の `flowId` と `aliasId`, `flowName` を追加します。`description` にはユーザーの入力を促すための説明文章を記載します。この説明文章は Prompt Flow チャットのテキストボックスに記載されます。以下はその例です。
+
+**[packages/cdk/cdk.json](/packages/cdk/cdk.json) を編集**
+```json
+{
+  "context": {
+    "promptFlows": [
+      {
+        "flowId": "XXXXXXXXXX",
+        "aliasId": "YYYYYYYYYY",
+        "flowName": "WhatIsItFlow",
+        "description": "任意のキーワードをウェブ検索して、説明を返すフローです。文字を入力してください"
+      },
+      {
+        "flowId": "ZZZZZZZZZZ",
+        "aliasId": "OOOOOOOOOO",
+        "flowName": "RecipeFlow",
+        "description": "与えられたJSONをもとに、レシピを作成します。\n{\"dish\": \"カレーライス\", \"people\": 3} のように入力してください。"
+      },
+      {
+        "flowId": "PPPPPPPPPP",
+        "aliasId": "QQQQQQQQQQQ",
+        "flowName": "TravelPlanFlow",
+        "description": "与えられた配列をもとに、旅行計画を作成します。\n[{\"place\": \"東京\", \"day\": 3}, {\"place\": \"大阪\", \"day\": 2}] のように入力してください。"
+      }
+    ]
+  }
+}
+```
+
+
+
 ### 映像分析ユースケースの有効化
 
 映像分析ユースケースでは、映像の画像フレームとテキストを入力して画像の内容を LLM に分析させます。
@@ -324,6 +362,7 @@ Knowledge Base プロンプト例: キーワードで検索し情報を取得し
 2024/06 現在、マルチモーダルのモデルは以下です。
 
 ```
+"anthropic.claude-3-5-sonnet-20241022-v2:0",
 "anthropic.claude-3-5-sonnet-20240620-v1:0",
 "anthropic.claude-3-opus-20240229-v1:0",
 "anthropic.claude-3-sonnet-20240229-v1:0",
@@ -335,6 +374,8 @@ Knowledge Base プロンプト例: キーワードで検索し情報を取得し
 "eu.anthropic.claude-3-5-sonnet-20240620-v1:0",
 "eu.anthropic.claude-3-sonnet-20240229-v1:0",
 "eu.anthropic.claude-3-haiku-20240307-v1:0",
+"us.meta.llama3-2-90b-instruct-v1:0",
+"us.meta.llama3-2-11b-instruct-v1:0",
 ```
 
 これらのいずれかが `cdk.json` の `modelIds` に定義されている必要があります。
@@ -342,6 +383,7 @@ Knowledge Base プロンプト例: キーワードで検索し情報を取得し
 
 ```json
   "modelIds": [
+    "anthropic.claude-3-5-sonnet-20241022-v2:0",
     "anthropic.claude-3-5-sonnet-20240620-v1:0",
     "anthropic.claude-3-opus-20240229-v1:0",
     "anthropic.claude-3-sonnet-20240229-v1:0",
@@ -353,6 +395,8 @@ Knowledge Base プロンプト例: キーワードで検索し情報を取得し
     "eu.anthropic.claude-3-5-sonnet-20240620-v1:0",
     "eu.anthropic.claude-3-sonnet-20240229-v1:0",
     "eu.anthropic.claude-3-haiku-20240307-v1:0",
+    "us.meta.llama3-2-90b-instruct-v1:0",
+    "us.meta.llama3-2-11b-instruct-v1:0",
   ]
 ```
 
@@ -367,6 +411,7 @@ Knowledge Base プロンプト例: キーワードで検索し情報を取得し
 このソリューションが対応しているテキスト生成モデルは以下です。
 
 ```
+"anthropic.claude-3-5-sonnet-20241022-v2:0",
 "anthropic.claude-3-5-sonnet-20240620-v1:0",
 "anthropic.claude-3-opus-20240229-v1:0",
 "anthropic.claude-3-sonnet-20240229-v1:0",
@@ -379,6 +424,10 @@ Knowledge Base プロンプト例: キーワードで検索し情報を取得し
 "eu.anthropic.claude-3-sonnet-20240229-v1:0",
 "eu.anthropic.claude-3-haiku-20240307-v1:0",
 "amazon.titan-text-premier-v1:0",
+"us.meta.llama3-2-90b-instruct-v1:0",
+"us.meta.llama3-2-11b-instruct-v1:0",
+"us.meta.llama3-2-3b-instruct-v1:0",
+"us.meta.llama3-2-1b-instruct-v1:0",
 "meta.llama3-1-405b-instruct-v1:0",
 "meta.llama3-1-70b-instruct-v1:0",
 "meta.llama3-1-8b-instruct-v1:0",
@@ -404,7 +453,10 @@ Knowledge Base プロンプト例: キーワードで検索し情報を取得し
 ```
 "amazon.titan-image-generator-v2:0",
 "amazon.titan-image-generator-v1",
-"stability.stable-diffusion-xl-v1"
+"stability.stable-diffusion-xl-v1",
+"stability.sd3-large-v1:0",
+"stability.stable-image-core-v1:0",
+"stability.stable-image-ultra-v1:0"
 ```
 
 **指定したリージョンで指定したモデルが有効化されているかご確認ください。**
@@ -436,6 +488,7 @@ Knowledge Base プロンプト例: キーワードで検索し情報を取得し
 ```bash
   "modelRegion": "us-west-2",
   "modelIds": [
+    "anthropic.claude-3-5-sonnet-20241022-v2:0",
     "anthropic.claude-3-5-sonnet-20240620-v1:0",
     "anthropic.claude-3-opus-20240229-v1:0",
     "anthropic.claude-3-sonnet-20240229-v1:0",
@@ -449,7 +502,10 @@ Knowledge Base プロンプト例: キーワードで検索し情報を取得し
   "imageGenerationModelIds": [
     "amazon.titan-image-generator-v2:0",
     "amazon.titan-image-generator-v1",
-    "stability.stable-diffusion-xl-v1"
+    "stability.stable-diffusion-xl-v1",
+    "stability.sd3-large-v1:0",
+    "stability.stable-image-core-v1:0",
+    "stability.stable-image-ultra-v1:0"
   ],
 ```
 ### cross-region inference が対応しているモデルで us(北部バージニアもしくはオレゴン) の Amazon Bedrock のモデルを利用する場合
@@ -460,8 +516,10 @@ Knowledge Base プロンプト例: キーワードで検索し情報を取得し
     "us.anthropic.claude-3-opus-20240229-v1:0",
     "us.anthropic.claude-3-sonnet-20240229-v1:0",
     "us.anthropic.claude-3-haiku-20240307-v1:0",
-    "meta.llama3-1-70b-instruct-v1:0",
-    "meta.llama3-1-8b-instruct-v1:0",
+    "us.meta.llama3-2-90b-instruct-v1:0",
+    "us.meta.llama3-2-11b-instruct-v1:0",
+    "us.meta.llama3-2-3b-instruct-v1:0",
+    "us.meta.llama3-2-1b-instruct-v1:0",
     "cohere.command-r-plus-v1:0",
     "cohere.command-r-v1:0",
     "mistral.mistral-large-2407-v1:0"
@@ -469,7 +527,10 @@ Knowledge Base プロンプト例: キーワードで検索し情報を取得し
   "imageGenerationModelIds": [
     "amazon.titan-image-generator-v2:0",
     "amazon.titan-image-generator-v1",
-    "stability.stable-diffusion-xl-v1"
+    "stability.stable-diffusion-xl-v1",
+    "stability.sd3-large-v1:0",
+    "stability.stable-image-core-v1:0",
+    "stability.stable-image-ultra-v1:0"
   ],
 ```
 
@@ -596,7 +657,7 @@ context の allowedSignUpEmailDomains に 許可するドメインのリスト�
 
 #### IP アドレスによる制限
 
-Web アプリへのアクセスを IP で制限したい場合、AWS WAF による IP 制限を有効化することができます。[packages/cdk/cdk.json](/packages/cdk/cdk.json) の `allowedIpV4AddressRanges` では許可する IPv4 の CIDR を配列で指定することができ、`allowedIpV6AddressRanges` では許可する IPv6 の CIDR を配列で指定することができます。
+Web アプリへのアクセスを IP アドレスで制限したい場合、AWS WAF による IP アドレス制限を有効化することができます。[packages/cdk/cdk.json](/packages/cdk/cdk.json) の `allowedIpV4AddressRanges` では許可する IPv4 の CIDR を配列で指定することができ、`allowedIpV6AddressRanges` では許可する IPv6 の CIDR を配列で指定することができます。
 
 ```json
   "context": {
@@ -609,6 +670,9 @@ Web アプリへのアクセスを IP で制限したい場合、AWS WAF によ�
 
 Web アプリへのアクセスをアクセス元の国で制限したい場合、AWS WAF による地理的制限を有効化することができます。[packages/cdk/cdk.json](/packages/cdk/cdk.json) の `allowedCountryCodes` で許可する国を Country Code の配列で指定することができます。
 指定する国の Country Code は[ISO 3166-2 from wikipedia](https://en.wikipedia.org/wiki/ISO_3166-2)をご参照ください。
+
+「IP アドレスによる制限」も同時に設定している場合は、「送信元の IP アドレスが許可された IP アドレスに含まれている**かつ**、許可された国からのアクセス」のみ許可されます。
+
 ```json
   "context": {
     "allowedCountryCodes": ["JP"], // null から、許可国リストを指定することで有効化
@@ -722,34 +786,6 @@ context の `dashboard` に `true` を設定します。(デフォルトは `fal
 
 > [!NOTE]
 > モニタリング用のダッシュボードを有効後に、再度無効化する場合は、`dashboard: false` にして再デプロイすればモニタリング用ダッシュボードは無効化されますが、`GenerativeAiUseCasesDashboardStack` 自体は残ります。マネージメントコンソールを開き、modelRegion の CloudFormation から `GenerativeAiUseCasesDashboardStack` というスタックを削除することで完全に消去ができます。
-
-## ファイルアップロード機能の有効化
-
-PDF や Excel などのファイルをアップロードしてテキストを抽出する、ファイルアップロード機能を利用することができます。対応しているファイルは、csv, doc, docx, md, pdf, ppt, pptx, tsv, xlsx です。
-
-**[packages/cdk/cdk.json](/packages/cdk/cdk.json) を編集**
-```json
-{
-  "context": {
-    "recognizeFileEnabled": true,
-    "vpcId": null
-  }
-}
-```
-
-ファイルアップロード機能は ECS (Fargate) 上で実行されます。`vpcId`を指定しない場合は、VPC が新たに作成されます。また、Fargate 上で動くコンテナのビルドを行うために、デプロイ用のマシンでは Docker がインストールされている必要があり、Docker デーモンが起動している必要があります。
-
-既存の VPC を使用する場合は、`vpcId` を指定してください。
-
-
-```json
-{
-  "context": {
-    "recognizeFileEnabled": true,
-    "vpcId": "vpc-xxxxxxxxxxxxxxxxx"
-  }
-}
-```
 
 ## カスタムドメインの使用
 

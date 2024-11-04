@@ -10,10 +10,12 @@ import {
   QueryCommandOutput,
   RetrieveCommandOutput,
 } from '@aws-sdk/client-kendra';
-import { RetrieveCommandOutput as RetrieveCommandOutputKnowledgeBase } from '@aws-sdk/client-bedrock-agent-runtime';
+import {
+  FlowInputContent,
+  RetrieveCommandOutput as RetrieveCommandOutputKnowledgeBase,
+} from '@aws-sdk/client-bedrock-agent-runtime';
 import { GenerateImageParams } from './image';
 import { ShareId, UserIdAndChatId } from './share';
-import { MediaFormat } from '@aws-sdk/client-transcribe';
 
 export type StreamingChunk = {
   text: string;
@@ -61,6 +63,8 @@ export type UpdateSystemContextTitleResponse = {
 export type UpdateFeedbackRequest = {
   createdDate: string;
   feedback: string;
+  reasons?: string[];
+  detailedFeedback?: string;
 };
 
 export type UpdateFeedbackResponse = {
@@ -82,6 +86,12 @@ export type PredictRequest = {
 };
 
 export type PredictResponse = string;
+
+export type PromptFlowRequest = {
+  flowIdentifier: string;
+  flowAliasIdentifier: string;
+  document: FlowInputContent.DocumentMember['document'];
+};
 
 export type PredictTitleRequest = {
   model: Model;
@@ -184,12 +194,4 @@ export type GetFileUploadSignedUrlResponse = string;
 
 export type UploadFileRequest = {
   file: File;
-};
-
-export type RecognizeFileRequest = {
-  fileUrl: string;
-};
-
-export type RecognizeFileResponse = {
-  text: string;
 };
